@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: hello-app
-          image: us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:GKEPY
+          image: us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:a474118cd7c180da9b738071421b3de610321c307d74d90a98a0b45186d72e66
+
           ports:
             - containerPort: 8080
 
