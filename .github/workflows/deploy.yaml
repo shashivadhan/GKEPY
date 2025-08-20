@@ -19,6 +19,12 @@ jobs:
           workload_identity_provider: 'projects/1014437436977/locations/global/workloadIdentityPools/github-wif1/providers/github-provider1'
           service_account: 'github-actions@saikiran-gcp.iam.gserviceaccount.com'
           create_credentials_file: true
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+        with:
+            version: 'latest'
+            install_components: 'gke-gcloud-auth-plugin'
+
 
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
