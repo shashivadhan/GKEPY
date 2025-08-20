@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: hello-app
-          image: us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app@sha256:3d140056b05d04ef068cf7f99b3b8d3fed39c2a20496f60d1795fb2c39ac76bc
+          image: image: us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:latest
 
 
           ports:
