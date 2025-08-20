@@ -1,0 +1,49 @@
+name: CI/CD to GKE with WIF
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/1014437436977/locations/global/workloadIdentityPools1/github-wif1/providers/github-provider'
+          service_account: 'github-actions@saikiran-gcp.iam.gserviceaccount.com'
+          create_credentials_file: true
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: Build Docker image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:$GITHUB_SHA .
+          echo "IMAGE=us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:$GITHUB_SHA" >> $GITHUB_ENV
+
+      - name: Authenticate Docker to Artifact Registry
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Push Docker image
+        run: |
+          docker push $IMAGE
+
+      - name: Update k8s manifest
+        run: |
+          sed -i "s|<YOUR_IMAGE>|$IMAGE|g" deployment.yaml
+
+      - name: Deploy to GKE
+        run: |
+          gcloud container clusters get-credentials hello-gke --zone <YOUR_ZONE>
+          kubectl apply -f deployment.yaml
