@@ -1,13 +1,10 @@
 name: CI/CD to GKE with WIF
-
 on:
   push:
     branches: [main]
-
 permissions:
   contents: 'read'
   id-token: 'write'
-
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -20,12 +17,17 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: 'projects/1014437436977/locations/global/workloadIdentityPools/github-wif1/providers/github-provider1'
-          
           service_account: 'github-actions@saikiran-gcp.iam.gserviceaccount.com'
           create_credentials_file: true
 
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          curl -Lo gke-gcloud-auth-plugin https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/gke-gcloud-auth-plugin
+          chmod +x gke-gcloud-auth-plugin
+          sudo mv gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin
 
       - name: Build Docker image
         run: |
