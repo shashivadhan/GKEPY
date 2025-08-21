@@ -1,10 +1,13 @@
 name: CI/CD to GKE with WIF
+
 on:
   push:
     branches: [main]
+
 permissions:
   contents: 'read'
   id-token: 'write'
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -19,40 +22,26 @@ jobs:
           workload_identity_provider: 'projects/1014437436977/locations/global/workloadIdentityPools/github-wif1/providers/github-provider1'
           service_account: 'github-actions@saikiran-gcp.iam.gserviceaccount.com'
           create_credentials_file: true
+
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
         with:
-            version: 'latest'
-            install_components: 'gke-gcloud-auth-plugin'
-
-
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
-
-      - name: Install gke-gcloud-auth-plugin
-        run: |
-          curl -Lo gke-gcloud-auth-plugin https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/gke-gcloud-auth-plugin
-          chmod +x gke-gcloud-auth-plugin
-          sudo mv gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin
+          install_components: 'gke-gcloud-auth-plugin'
 
       - name: Build Docker image
         run: |
-          docker build -t us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:$GITHUB_SHA .
-          echo "IMAGE=us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:$GITHUB_SHA" >> $GITHUB_ENV
-
+          docker build -t us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:latest .
+      
       - name: Authenticate Docker to Artifact Registry
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
 
       - name: Push Docker image
         run: |
-          docker push $IMAGE
-
-      - name: Update k8s manifest
-        run: |
-          sed -i "s|<YOUR_IMAGE>|$IMAGE|g" deployment.yaml
+          docker push us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:latest
 
       - name: Deploy to GKE
         run: |
           gcloud container clusters get-credentials hello-gke --region us-central1
-          kubectl apply -f deployment.yaml
+          kubectl set image deployment/hello-app hello-app=us-central1-docker.pkg.dev/saikiran-gcp/hello-repo/hello-app:latest
+          kubectl rollout status deployment/hello-app
